@@ -1,0 +1,44 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String   @unique
+  address   String?
+  symptoms  String?  // 症狀
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Order {
+  id              Int       @id @default(autoincrement())
+  orderId         String    @unique // 訂單編號
+  date            DateTime  // 日期
+  channel         String?   // 通路
+  productName     String?   // 商品名稱
+  quantity        Int       @default(1) // 數量
+  amount          Float     @default(0) // 銷售金額
+  shippingFee     Float     @default(0) // 運費
+  logistics       String?   // 物流
+  arrivalDate     DateTime? // 到貨日期
+  
+  // 售後關懷欄位: 填寫內容後視為已處理
+  afterSalesNotes String?   // 對應 Excel "售後關懷(+D5)"
+  
+  remarks         String?   // 備註
+  
+  customerId      Int
+  customer        Customer  @relation(fields: [customerId], references: [id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
