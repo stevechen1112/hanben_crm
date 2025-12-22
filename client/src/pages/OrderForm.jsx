@@ -7,6 +7,9 @@ export default function OrderForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [channels, setChannels] = useState([]);
+  
   const [formData, setFormData] = useState({
     orderId: '',
     date: new Date().toISOString().split('T')[0],
@@ -22,6 +25,22 @@ export default function OrderForm() {
     arrivalDate: '',
     remarks: ''
   });
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const [prodRes, chanRes] = await Promise.all([
+          axios.get('/api/settings/products'),
+          axios.get('/api/settings/channels')
+        ]);
+        setProducts(prodRes.data);
+        setChannels(chanRes.data);
+      } catch (error) {
+        console.error('Error fetching options:', error);
+      }
+    };
+    fetchOptions();
+  }, []);
 
   // Auto-fill customer data when phone changes (debounced)
   useEffect(() => {
@@ -122,11 +141,7 @@ export default function OrderForm() {
               <label className="block text-sm font-medium text-gray-700">通路</label>
               <input list="channels" name="channel" value={formData.channel} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
               <datalist id="channels">
-                <option value="官網" />
-                <option value="蝦皮" />
-                <option value="MOMO" />
-                <option value="門市" />
-                <option value="電話訂購" />
+                {channels.map(c => <option key={c.id} value={c.name} />)}
               </datalist>
             </div>
           </div>
@@ -138,9 +153,7 @@ export default function OrderForm() {
               <label className="block text-sm font-medium text-gray-700">商品名稱</label>
               <input list="products" name="productName" value={formData.productName} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
               <datalist id="products">
-                <option value="A商品" />
-                <option value="B商品" />
-                <option value="C組合包" />
+                {products.map(p => <option key={p.id} value={p.name} />)}
               </datalist>
             </div>
             <div className="grid grid-cols-2 gap-4">

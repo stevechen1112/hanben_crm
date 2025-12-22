@@ -221,6 +221,17 @@ app.post('/api/orders', async (req, res) => {
       }
     });
 
+    // 3. Decrement Stock (if product exists)
+    if (productName) {
+      const product = await prisma.product.findUnique({ where: { name: productName } });
+      if (product) {
+        await prisma.product.update({
+          where: { id: product.id },
+          data: { stock: { decrement: Number(quantity) || 1 } }
+        });
+      }
+    }
+
     res.json(order);
   } catch (error) {
     console.error('Order creation error:', error);
@@ -434,6 +445,84 @@ app.post('/api/import/customers', upload.single('file'), async (req, res) => {
       count++;
     }
     res.json({ success: true, count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Settings API ---
+
+// Products
+app.get('/api/settings/products', async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({ orderBy: { name: 'asc' } });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/settings/products', async (req, res) => {
+  const { name, stock } = req.body;
+  try {
+    const product = await prisma.product.create({
+      data: { name, stock: Number(stock) || 0 }
+    });
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/settings/products/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, stock } = req.body;
+  try {
+    const product = await prisma.product.update({
+      where: { id: Number(id) },
+      data: { name, stock: Number(stock) }
+    });
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/settings/products/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.product.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Channels
+app.get('/api/settings/channels', async (req, res) => {
+  try {
+    const channels = await prisma.channel.findMany({ orderBy: { name: 'asc' } });
+    res.json(channels);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/settings/channels', async (req, res) => {
+  const { name } = req.body;
+  try {
+    const channel = await prisma.channel.create({ data: { name } });
+    res.json(channel);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/settings/channels/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.channel.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
