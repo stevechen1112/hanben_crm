@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, ShoppingCart, Bell, PlusCircle, Menu, X, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingCart, Bell, PlusCircle, Menu, X, ChevronLeft, Settings as SettingsIcon } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import OrderList from './pages/OrderList';
 import CustomerList from './pages/CustomerList';
 import OrderForm from './pages/OrderForm';
 import AfterSalesList from './pages/AfterSalesList';
+import Settings from './pages/Settings';
 
 function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -81,6 +82,7 @@ function App() {
           <NavItem to="/orders" icon={ShoppingCart} label="訂單管理" />
           <NavItem to="/customers" icon={Users} label="客戶管理" />
           <NavItem to="/after-sales" icon={Bell} label="售後關懷" />
+          <NavItem to="/settings" icon={SettingsIcon} label="系統設定" />
         </nav>
       </div>
 
@@ -101,6 +103,7 @@ function App() {
             <Route path="/orders/new" element={<OrderForm />} />
             <Route path="/customers" element={<CustomerList />} />
             <Route path="/after-sales" element={<AfterSalesList />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </div>
       </div>
