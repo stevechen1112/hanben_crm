@@ -42,3 +42,25 @@ model Order {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Channel {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Logistics {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

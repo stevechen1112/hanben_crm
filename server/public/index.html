@@ -45,6 +45,11 @@
                           class="absolute right-3 bg-red-500 text-white text-xs rounded-full px-2 py-0.5"
                           x-text="stats.pendingAfterSalesCount"></span>
                 </button>
+                <button @click="currentPage = 'settings'; fetchOptions()" 
+                        :class="currentPage === 'settings' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
+                        class="w-full flex items-center space-x-2 p-3 rounded-lg transition-colors">
+                    <span>⚙️</span><span>系統設定</span>
+                </button>
             </nav>
         </div>
 
@@ -70,6 +75,75 @@
                         <p class="text-sm text-gray-500 mb-1">待處理售後關懷</p>
                         <h3 class="text-2xl font-bold text-red-600" x-text="stats.pendingAfterSalesCount"></h3>
                     </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div x-show="currentPage === 'settings'" class="space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800">系統設定</h2>
+                
+                <!-- Products -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <h3 class="text-lg font-semibold mb-4">商品管理</h3>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" x-model="newProduct.name" placeholder="商品名稱" class="border p-2 rounded flex-1">
+                        <input type="number" x-model="newProduct.stock" placeholder="庫存" class="border p-2 rounded w-24">
+                        <button @click="addProduct" class="bg-green-500 text-white px-4 py-2 rounded">新增</button>
+                    </div>
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left border-b">
+                                <th class="pb-2">名稱</th>
+                                <th class="pb-2">庫存</th>
+                                <th class="pb-2">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="p in options.products" :key="p.id">
+                                <tr class="border-b">
+                                    <td class="py-2" x-text="p.name"></td>
+                                    <td class="py-2" x-text="p.stock"></td>
+                                    <td class="py-2">
+                                        <button @click="deleteProduct(p.id)" class="text-red-500">刪除</button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Channels -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <h3 class="text-lg font-semibold mb-4">通路管理</h3>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" x-model="newChannel.name" placeholder="通路名稱" class="border p-2 rounded flex-1">
+                        <button @click="addChannel" class="bg-green-500 text-white px-4 py-2 rounded">新增</button>
+                    </div>
+                    <ul>
+                        <template x-for="c in options.channels" :key="c.id">
+                            <li class="flex justify-between border-b py-2">
+                                <span x-text="c.name"></span>
+                                <button @click="deleteChannel(c.id)" class="text-red-500">刪除</button>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+                <!-- Logistics -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <h3 class="text-lg font-semibold mb-4">物流管理</h3>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" x-model="newLogistics.name" placeholder="物流名稱" class="border p-2 rounded flex-1">
+                        <button @click="addLogistics" class="bg-green-500 text-white px-4 py-2 rounded">新增</button>
+                    </div>
+                    <ul>
+                        <template x-for="l in options.logistics" :key="l.id">
+                            <li class="flex justify-between border-b py-2">
+                                <span x-text="l.name"></span>
+                                <button @click="deleteLogistics(l.id)" class="text-red-500">刪除</button>
+                            </li>
+                        </template>
+                    </ul>
                 </div>
             </div>
 
@@ -118,8 +192,8 @@
                                 <input list="channels" x-model="orderForm.channel" 
                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
                                 <datalist id="channels">
-                                    <template x-for="option in options.channels">
-                                        <option :value="option"></option>
+                                    <template x-for="option in options.channels" :key="option.id">
+                                        <option :value="option.name"></option>
                                     </template>
                                 </datalist>
                             </div>
@@ -132,10 +206,10 @@
                                 <input list="products" x-model="orderForm.productName" 
                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
                                 <datalist id="products">
-                                    <option value="A商品"></option>
-                                    <template x-for="option in options.products">
-                                        <option :value="option"></option>
-                                    </template
+                                    <template x-for="option in options.products" :key="option.id">
+                                        <option :value="option.name" x-text="`${option.name} (庫存: ${option.stock})`"></option>
+                                    </template>
+                                </datalist>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -160,8 +234,8 @@
                                     <input list="logistics" x-model="orderForm.logistics" 
                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
                                     <datalist id="logistics">
-                                        <template x-for="option in options.logistics">
-                                            <option :value="option"></option>
+                                        <template x-for="option in options.logistics" :key="option.id">
+                                            <option :value="option.name"></option>
                                         </template>
                                     </datalist>
                                 </div>

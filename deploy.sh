@@ -27,15 +27,7 @@ rm -f package-lock.json
 npm install
 npx prisma db push
 
-echo "Setting up Frontend..."
-cd $APP_DIR/client
-rm -f package-lock.json
-npm install
-npm run build
-
-echo "Preparing public assets..."
-mkdir -p $APP_DIR/server/public
-cp -r $APP_DIR/client/dist/* $APP_DIR/server/public/
+# Frontend is now served directly from server/public (No-Build), so no build step is needed.
 
 echo "Starting Application..."
 cd $APP_DIR/server

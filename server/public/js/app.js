@@ -1,15 +1,17 @@
-// ===== 預設選項設定區 - 在此編輯下拉選單的選項 =====
-const OPTIONS = {
-    channels: ['官網', '蝦皮', 'MOMO', '門市', '電話訂購', 'LINE'],
-    products: ['A商品', 'B商品', 'C組合包', 'D特惠包'],
-    logistics: ['黑貓', '新竹物流', '郵局', '超商取貨', '宅配通']
-};
-// =========================================================
-
 function crmApp() {
     return {
         currentPage: 'dashboard',
-        options: OPTIONS, // 將選項暴露給模板使用
+        // Options loaded from API
+        options: {
+            channels: [],
+            products: [],
+            logistics: []
+        },
+        // Settings Form Data
+        newProduct: { name: '', stock: 0 },
+        newChannel: { name: '' },
+        newLogistics: { name: '' },
+
         stats: {
             totalCustomers: 0,
             totalOrders: 0,
@@ -41,6 +43,69 @@ function crmApp() {
 
         async init() {
             await this.loadDashboard();
+            await this.fetchOptions();
+        },
+
+        async fetchOptions() {
+            try {
+                const [pRes, cRes, lRes] = await Promise.all([
+                    axios.get('/api/products'),
+                    axios.get('/api/channels'),
+                    axios.get('/api/logistics')
+                ]);
+                this.options.products = pRes.data;
+                this.options.channels = cRes.data;
+                this.options.logistics = lRes.data;
+            } catch (error) {
+                console.error('Error loading options:', error);
+            }
+        },
+
+        // --- Settings Management ---
+        async addProduct() {
+            if (!this.newProduct.name) return;
+            try {
+                await axios.post('/api/products', this.newProduct);
+                this.newProduct = { name: '', stock: 0 };
+                await this.fetchOptions();
+            } catch (e) { alert('新增失敗: ' + e.message); }
+        },
+        async deleteProduct(id) {
+            if (!confirm('確定刪除?')) return;
+            try {
+                await axios.delete(`/api/products/${id}`);
+                await this.fetchOptions();
+            } catch (e) { alert('刪除失敗'); }
+        },
+        async addChannel() {
+            if (!this.newChannel.name) return;
+            try {
+                await axios.post('/api/channels', this.newChannel);
+                this.newChannel = { name: '' };
+                await this.fetchOptions();
+            } catch (e) { alert('新增失敗: ' + e.message); }
+        },
+        async deleteChannel(id) {
+            if (!confirm('確定刪除?')) return;
+            try {
+                await axios.delete(`/api/channels/${id}`);
+                await this.fetchOptions();
+            } catch (e) { alert('刪除失敗'); }
+        },
+        async addLogistics() {
+            if (!this.newLogistics.name) return;
+            try {
+                await axios.post('/api/logistics', this.newLogistics);
+                this.newLogistics = { name: '' };
+                await this.fetchOptions();
+            } catch (e) { alert('新增失敗: ' + e.message); }
+        },
+        async deleteLogistics(id) {
+            if (!confirm('確定刪除?')) return;
+            try {
+                await axios.delete(`/api/logistics/${id}`);
+                await this.fetchOptions();
+            } catch (e) { alert('刪除失敗'); }
         },
 
         async loadDashboard() {
