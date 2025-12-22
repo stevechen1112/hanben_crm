@@ -27,7 +27,13 @@ rm -f package-lock.json
 npm install
 npx prisma db push
 
-# Frontend is now served directly from server/public (No-Build), so no build step is needed.
+echo "Building Frontend..."
+cd $APP_DIR/client
+npm install
+npm run build
+echo "Copying frontend build to server/public..."
+rm -rf $APP_DIR/server/public/*
+cp -r dist/* $APP_DIR/server/public/
 
 echo "Starting Application..."
 cd $APP_DIR/server
