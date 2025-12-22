@@ -31,12 +31,22 @@ export default function Settings() {
   // Product Handlers
   const handleAddProduct = async (e) => {
     e.preventDefault();
+
+    // 前端驗證
+    if (!newProduct.name || newProduct.name.trim() === '') {
+      alert('請輸入商品名稱');
+      return;
+    }
+
     try {
       await axios.post('/api/settings/products', newProduct);
+      alert('商品新增成功！');
       setNewProduct({ name: '', stock: 0 });
       fetchSettings();
     } catch (error) {
-      alert('新增商品失敗: ' + (error.response?.data?.error || error.message));
+      console.error('新增商品失敗:', error);
+      const errorMessage = error.response?.data?.error || error.message || '未知錯誤';
+      alert('新增商品失敗: ' + errorMessage);
     }
   };
 
@@ -63,12 +73,22 @@ export default function Settings() {
   // Channel Handlers
   const handleAddChannel = async (e) => {
     e.preventDefault();
+
+    // 前端驗證
+    if (!newChannel || newChannel.trim() === '') {
+      alert('請輸入通路名稱');
+      return;
+    }
+
     try {
       await axios.post('/api/settings/channels', { name: newChannel });
+      alert('通路新增成功！');
       setNewChannel('');
       fetchSettings();
     } catch (error) {
-      alert('新增通路失敗: ' + (error.response?.data?.error || error.message));
+      console.error('新增通路失敗:', error);
+      const errorMessage = error.response?.data?.error || error.message || '未知錯誤';
+      alert('新增通路失敗: ' + errorMessage);
     }
   };
 
@@ -94,14 +114,14 @@ export default function Settings() {
         {/* Product Management */}
         <div className="bg-white p-6 rounded-xl shadow-sm border">
           <h3 className="text-xl font-semibold mb-4 text-gray-700">商品管理</h3>
-          
+
           <form onSubmit={handleAddProduct} className="flex gap-2 mb-6">
             <input
               type="text"
               placeholder="商品名稱"
               required
               value={newProduct.name}
-              onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+              onChange={e => setNewProduct({ ...newProduct, name: e.target.value })}
               className="flex-1 rounded-md border-gray-300 border p-2"
             />
             <input
@@ -109,7 +129,7 @@ export default function Settings() {
               placeholder="庫存"
               required
               value={newProduct.stock}
-              onChange={e => setNewProduct({...newProduct, stock: e.target.value})}
+              onChange={e => setNewProduct({ ...newProduct, stock: e.target.value })}
               className="w-24 rounded-md border-gray-300 border p-2"
             />
             <button type="submit" className="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">
@@ -124,15 +144,15 @@ export default function Settings() {
                   <span className="font-medium flex items-center">{product.name}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-500">庫存:</span>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       defaultValue={product.stock}
                       onBlur={(e) => handleUpdateProduct(product.id, product.name, e.target.value)}
                       className="w-20 p-1 border rounded text-sm"
                     />
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => handleDeleteProduct(product.id)}
                   className="text-red-500 hover:bg-red-50 p-1 rounded"
                 >
@@ -147,7 +167,7 @@ export default function Settings() {
         {/* Channel Management */}
         <div className="bg-white p-6 rounded-xl shadow-sm border">
           <h3 className="text-xl font-semibold mb-4 text-gray-700">通路管理</h3>
-          
+
           <form onSubmit={handleAddChannel} className="flex gap-2 mb-6">
             <input
               type="text"
@@ -166,7 +186,7 @@ export default function Settings() {
             {channels.map(channel => (
               <div key={channel.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <span className="font-medium">{channel.name}</span>
-                <button 
+                <button
                   onClick={() => handleDeleteChannel(channel.id)}
                   className="text-red-500 hover:bg-red-50 p-1 rounded"
                 >
