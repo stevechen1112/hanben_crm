@@ -95,18 +95,54 @@
                             <tr class="text-left border-b">
                                 <th class="pb-2">名稱</th>
                                 <th class="pb-2">庫存</th>
+                                <th class="pb-2">調整</th>
+                                <th class="pb-2">備註</th>
                                 <th class="pb-2">操作</th>
                             </tr>
                         </thead>
                         <tbody>
                             <template x-for="p in options.products" :key="p.id">
-                                <tr class="border-b">
-                                    <td class="py-2" x-text="p.name"></td>
-                                    <td class="py-2" x-text="p.stock"></td>
-                                    <td class="py-2">
-                                        <button @click="deleteProduct(p.id)" class="text-red-500">刪除</button>
-                                    </td>
-                                </tr>
+                                <template>
+                                    <tr class="border-b">
+                                        <td class="py-2" x-text="p.name"></td>
+                                        <td class="py-2" x-text="p.stock"></td>
+                                        <td class="py-2">
+                                            <input type="number" min="1" :id="'adj-' + p.id" x-model="stockAdjust[p.id]" placeholder="數量"
+                                                   class="border p-1 rounded w-24">
+                                            <div class="mt-2 flex gap-2">
+                                                <button type="button" @click="adjustProductStock(p.id, 'in')" class="text-sm text-green-600 hover:underline">+ 入庫</button>
+                                                <button type="button" @click="adjustProductStock(p.id, 'out')" class="text-sm text-orange-600 hover:underline">- 出庫</button>
+                                            </div>
+                                        </td>
+                                        <td class="py-2">
+                                            <input type="text" x-model="stockNote[p.id]" placeholder="例如：補貨/盤點/退貨"
+                                                   class="border p-1 rounded w-full">
+                                        </td>
+                                        <td class="py-2">
+                                            <button type="button" @click="toggleMovements(p.id)" class="text-blue-600 mr-3 hover:underline">異動</button>
+                                            <button @click="deleteProduct(p.id)" class="text-red-500 hover:underline">刪除</button>
+                                        </td>
+                                    </tr>
+                                    <tr x-show="showMovements[p.id]" class="border-b bg-gray-50">
+                                        <td colspan="5" class="py-3">
+                                            <div class="text-sm text-gray-700 font-medium mb-2">最近 10 筆庫存異動</div>
+                                            <template x-if="!movementsByProduct[p.id] || movementsByProduct[p.id].length === 0">
+                                                <div class="text-sm text-gray-500">尚無異動紀錄</div>
+                                            </template>
+                                            <ul class="text-sm text-gray-600 space-y-1" x-show="movementsByProduct[p.id] && movementsByProduct[p.id].length > 0">
+                                                <template x-for="m in movementsByProduct[p.id]" :key="m.id">
+                                                    <li>
+                                                        <span x-text="new Date(m.createdAt).toLocaleString()"></span>
+                                                        - <span x-text="m.type"></span>
+                                                        - <span x-text="m.quantity"></span>
+                                                        <span x-show="m.ref" class="text-gray-500">(ref: <span x-text="m.ref"></span>)</span>
+                                                        <span x-show="m.note" class="text-gray-500">- <span x-text="m.note"></span></span>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                </template>
                             </template>
                         </tbody>
                     </table>
@@ -201,27 +237,40 @@
 
                         <div class="space-y-4">
                             <h3 class="text-lg font-semibold text-gray-700 border-b pb-2">商品與物流</h3>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">商品名稱</label>
-                                <input list="products" x-model="orderForm.productName" 
-                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-sm font-medium text-gray-700">商品項目</label>
+                                    <button type="button" @click="addOrderItem" class="text-sm text-blue-600 hover:underline">+ 新增品項</button>
+                                </div>
+
                                 <datalist id="products">
                                     <template x-for="option in options.products" :key="option.id">
                                         <option :value="option.name" x-text="`${option.name} (庫存: ${option.stock})`"></option>
                                     </template>
                                 </datalist>
+
+                                <template x-for="(item, idx) in orderForm.items" :key="idx">
+                                    <div class="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
+                                        <div class="md:col-span-3">
+                                            <input list="products" x-model="item.productName" placeholder="商品名稱" 
+                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                                        </div>
+                                        <div>
+                                            <input type="number" min="1" x-model="item.quantity" placeholder="數量" 
+                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                                        </div>
+                                        <div class="flex justify-end">
+                                            <button type="button" @click="removeOrderItem(idx)" 
+                                                    class="text-sm text-red-600 hover:underline" x-show="orderForm.items.length > 1">刪除</button>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">數量</label>
-                                    <input type="number" x-model="orderForm.quantity" 
-                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">銷售金額</label>
-                                    <input type="number" x-model="orderForm.amount" 
-                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
-                                </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">銷售金額</label>
+                                <input type="number" x-model="orderForm.amount" 
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -264,11 +313,18 @@
 
             <!-- Orders List -->
             <div x-show="currentPage === 'orders'" class="space-y-6">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <h2 class="text-2xl font-bold text-gray-800">訂單管理</h2>
-                    <input type="text" x-model="searchOrders" @input.debounce.300ms="loadOrders" 
-                           placeholder="搜尋訂單編號、客戶..." 
-                           class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <input type="text" x-model="searchOrders" @input.debounce.300ms="loadOrders" 
+                               placeholder="搜尋訂單編號、客戶..." 
+                               class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-auto">
+
+                        <button type="button" @click="exportOrders" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">匯出</button>
+                        <button type="button" @click="downloadOrdersTemplate" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">模板</button>
+                        <button type="button" @click="triggerOrdersImport" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">匯入</button>
+                        <input type="file" x-ref="ordersImportFile" @change="importOrders($event)" class="hidden" accept=".xlsx,.xls">
+                    </div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -288,7 +344,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" x-text="order.orderId"></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="new Date(order.date).toLocaleDateString()"></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="order.customer.name"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="order.productName"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="formatOrderItems(order)"></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">$<span x-text="order.amount"></span></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                                         <span x-show="order.arrivalDate" class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">已到貨</span>
@@ -318,11 +374,18 @@
 
             <!-- Customers List -->
             <div x-show="currentPage === 'customers'" class="space-y-6">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <h2 class="text-2xl font-bold text-gray-800">客戶管理</h2>
-                    <input type="text" x-model="searchCustomers" @input.debounce.300ms="loadCustomers" 
-                           placeholder="搜尋姓名、電話..." 
-                           class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <input type="text" x-model="searchCustomers" @input.debounce.300ms="loadCustomers" 
+                               placeholder="搜尋姓名、電話..." 
+                               class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-auto">
+
+                        <button type="button" @click="exportCustomers" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">匯出</button>
+                        <button type="button" @click="downloadCustomersTemplate" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">模板</button>
+                        <button type="button" @click="triggerCustomersImport" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">匯入</button>
+                        <input type="file" x-ref="customersImportFile" @change="importCustomers($event)" class="hidden" accept=".xlsx,.xls">
+                    </div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -332,16 +395,48 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">電話</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">地址</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">訂單數</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <template x-for="customer in customers.data" :key="customer.id">
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" x-text="customer.name"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="customer.phone"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="customer.address"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="customer.orders.length"></td>
-                                </tr>
+                                <template>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" x-text="customer.name"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="customer.phone"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="customer.address"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="customer.orders.length"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <button type="button" @click="startEditCustomer(customer)" class="text-blue-600 hover:underline">編輯</button>
+                                        </td>
+                                    </tr>
+                                    <tr x-show="editingCustomerId === customer.id" class="bg-gray-50">
+                                        <td colspan="5" class="px-6 py-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">姓名</label>
+                                                    <input type="text" x-model="customerEdit.name" class="mt-1 block w-full rounded-md border-gray-300 border p-2">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">電話</label>
+                                                    <input type="text" x-model="customerEdit.phone" class="mt-1 block w-full rounded-md border-gray-300 border p-2">
+                                                </div>
+                                                <div class="md:col-span-2">
+                                                    <label class="block text-sm font-medium text-gray-700">地址</label>
+                                                    <input type="text" x-model="customerEdit.address" class="mt-1 block w-full rounded-md border-gray-300 border p-2">
+                                                </div>
+                                                <div class="md:col-span-2">
+                                                    <label class="block text-sm font-medium text-gray-700">症狀</label>
+                                                    <input type="text" x-model="customerEdit.symptoms" class="mt-1 block w-full rounded-md border-gray-300 border p-2">
+                                                </div>
+                                            </div>
+                                            <div class="mt-4 flex gap-3 justify-end">
+                                                <button type="button" @click="cancelEditCustomer" class="px-4 py-2 border rounded">取消</button>
+                                                <button type="button" @click="saveCustomerEdit" class="px-4 py-2 bg-blue-600 text-white rounded">儲存</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
                             </template>
                         </tbody>
                     </table>

@@ -12,6 +12,16 @@ function crmApp() {
         newChannel: { name: '' },
         newLogistics: { name: '' },
 
+        // Inventory adjustments
+        stockAdjust: {},
+        stockNote: {},
+        showMovements: {},
+        movementsByProduct: {},
+
+        // Customer edit (inline)
+        editingCustomerId: null,
+        customerEdit: { id: null, name: '', phone: '', address: '', symptoms: '' },
+
         stats: {
             totalCustomers: 0,
             totalOrders: 0,
@@ -25,8 +35,9 @@ function crmApp() {
             phone: '',
             address: '',
             channel: '',
-            productName: '',
-            quantity: 1,
+            items: [
+                { productName: '', quantity: 1 }
+            ],
             amount: 0,
             shippingFee: 0,
             logistics: '',
@@ -69,6 +80,43 @@ function crmApp() {
                 this.newProduct = { name: '', stock: 0 };
                 await this.fetchOptions();
             } catch (e) { alert('新增失敗: ' + e.message); }
+        },
+
+        async adjustProductStock(productId, direction) {
+            const qty = Number(this.stockAdjust[productId]) || 0;
+            if (qty <= 0) {
+                alert('請輸入調整數量（大於 0）');
+                return;
+            }
+            const delta = direction === 'in' ? qty : -qty;
+            const note = this.stockNote[productId] || '';
+            try {
+                await axios.post(`/api/products/${productId}/adjust-stock`, { delta, note });
+                this.stockAdjust[productId] = '';
+                this.stockNote[productId] = '';
+                await this.fetchOptions();
+                if (this.showMovements[productId]) {
+                    await this.loadProductMovements(productId);
+                }
+            } catch (e) {
+                alert(e?.response?.data?.error || '調整失敗');
+            }
+        },
+
+        async toggleMovements(productId) {
+            this.showMovements[productId] = !this.showMovements[productId];
+            if (this.showMovements[productId]) {
+                await this.loadProductMovements(productId);
+            }
+        },
+
+        async loadProductMovements(productId) {
+            try {
+                const res = await axios.get(`/api/products/${productId}/movements?limit=10`);
+                this.movementsByProduct[productId] = res.data;
+            } catch (e) {
+                this.movementsByProduct[productId] = [];
+            }
         },
         async deleteProduct(id) {
             if (!confirm('確定刪除?')) return;
@@ -117,6 +165,64 @@ function crmApp() {
             }
         },
 
+        exportOrders() {
+            window.open('/api/export/orders', '_blank');
+        },
+
+        downloadOrdersTemplate() {
+            window.open('/api/export/orders-template', '_blank');
+        },
+
+        exportCustomers() {
+            window.open('/api/export/customers', '_blank');
+        },
+
+        downloadCustomersTemplate() {
+            window.open('/api/export/customers-template', '_blank');
+        },
+
+        triggerOrdersImport() {
+            this.$refs?.ordersImportFile?.click();
+        },
+
+        triggerCustomersImport() {
+            this.$refs?.customersImportFile?.click();
+        },
+
+        async importOrders(event) {
+            const file = event?.target?.files?.[0];
+            if (!file) return;
+            const form = new FormData();
+            form.append('file', file);
+            try {
+                const res = await axios.post('/api/import/orders', form);
+                alert(`匯入完成！成功匯入/更新 ${res.data.count} 筆訂單。`);
+                await this.loadOrders();
+                await this.loadDashboard();
+            } catch (e) {
+                alert(e?.response?.data?.error || '匯入失敗，請檢查檔案格式');
+            } finally {
+                event.target.value = '';
+            }
+        },
+
+        async importCustomers(event) {
+            const file = event?.target?.files?.[0];
+            if (!file) return;
+            const form = new FormData();
+            form.append('file', file);
+            try {
+                const res = await axios.post('/api/import/customers', form);
+                alert(`匯入完成！成功匯入/更新 ${res.data.count} 筆客戶資料。`);
+                await this.loadCustomers();
+                await this.loadDashboard();
+            } catch (e) {
+                alert(e?.response?.data?.error || '匯入失敗，請檢查檔案格式');
+            } finally {
+                event.target.value = '';
+            }
+        },
+
         async lookupCustomer() {
             if (this.orderForm.phone.length >= 8) {
                 try {
@@ -131,9 +237,32 @@ function crmApp() {
             }
         },
 
+        addOrderItem() {
+            this.orderForm.items.push({ productName: '', quantity: 1 });
+        },
+
+        removeOrderItem(index) {
+            if (this.orderForm.items.length <= 1) return;
+            this.orderForm.items.splice(index, 1);
+        },
+
+        formatOrderItems(order) {
+            if (Array.isArray(order.items) && order.items.length > 0) {
+                return order.items.map((it) => `${it.productName} x${it.quantity}`).join(', ');
+            }
+            return order.productName || '';
+        },
+
         async submitOrder() {
             try {
-                await axios.post('/api/orders', this.orderForm);
+                const payload = {
+                    ...this.orderForm,
+                    orderItems: (this.orderForm.items || [])
+                        .map((it) => ({ productName: (it.productName || '').trim(), quantity: Number(it.quantity) || 0 }))
+                        .filter((it) => it.productName && it.quantity > 0)
+                };
+
+                await axios.post('/api/orders', payload);
                 alert('訂單建立成功！');
                 // Reset form
                 this.orderForm = {
@@ -143,8 +272,9 @@ function crmApp() {
                     phone: '',
                     address: '',
                     channel: '',
-                    productName: '',
-                    quantity: 1,
+                    items: [
+                        { productName: '', quantity: 1 }
+                    ],
                     amount: 0,
                     shippingFee: 0,
                     logistics: '',
@@ -156,7 +286,7 @@ function crmApp() {
                 await this.loadDashboard();
             } catch (error) {
                 console.error('Error creating order:', error);
-                alert('建立失敗，請檢查欄位');
+                alert(error?.response?.data?.error || '建立失敗，請檢查欄位');
             }
         },
 
@@ -175,6 +305,39 @@ function crmApp() {
                 this.customers = res.data;
             } catch (error) {
                 console.error('Error loading customers:', error);
+            }
+        },
+
+        startEditCustomer(customer) {
+            this.editingCustomerId = customer.id;
+            this.customerEdit = {
+                id: customer.id,
+                name: customer.name || '',
+                phone: customer.phone || '',
+                address: customer.address || '',
+                symptoms: customer.symptoms || ''
+            };
+        },
+
+        cancelEditCustomer() {
+            this.editingCustomerId = null;
+            this.customerEdit = { id: null, name: '', phone: '', address: '', symptoms: '' };
+        },
+
+        async saveCustomerEdit() {
+            if (!this.customerEdit.id) return;
+            try {
+                await axios.put(`/api/customers/${this.customerEdit.id}`, {
+                    name: this.customerEdit.name,
+                    phone: this.customerEdit.phone,
+                    address: this.customerEdit.address,
+                    symptoms: this.customerEdit.symptoms
+                });
+                this.cancelEditCustomer();
+                await this.loadCustomers();
+                alert('客戶資料已更新');
+            } catch (e) {
+                alert(e?.response?.data?.error || '更新失敗');
             }
         },
 

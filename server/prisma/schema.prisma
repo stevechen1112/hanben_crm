@@ -39,16 +39,49 @@ model Order {
   customerId      Int
   customer        Customer  @relation(fields: [customerId], references: [id])
 
+  items           OrderItem[]
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  order       Order    @relation(fields: [orderId], references: [id])
+
+  productId   Int
+  product     Product  @relation(fields: [productId], references: [id])
+
+  productName String
+  quantity    Int      @default(1)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Product {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   stock     Int      @default(0)
+  items     OrderItem[]
+  movements StockMovement[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model StockMovement {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+
+  // Signed quantity: +in, -out
+  quantity  Int
+  type      String
+  ref       String?
+  note      String?
+
+  createdAt DateTime @default(now())
 }
 
 model Channel {
