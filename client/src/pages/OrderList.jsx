@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Download, Upload } from 'lucide-react';
 
 export default function OrderList() {
   const [orders, setOrders] = useState([]);
@@ -31,19 +31,102 @@ export default function OrderList() {
     setPage(1); // Reset to page 1 on search
   };
 
+  const handleExport = async () => {
+    try {
+      const response = await axios.get('/api/export/orders', {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `orders_${new Date().toISOString().split('T')[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('匯出失敗');
+    }
+  };
+
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      await axios.post('/api/import/orders', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      alert('匯入成功！');
+      fetchOrders();
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('匯入失敗: ' + (error.response?.data?.error || error.message));
+    }
+    e.target.value = '';
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const response = await axios.get('/api/export/orders-template', {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'orders_template.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Template download error:', error);
+      alert('下載範本失敗');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">訂單管理</h2>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="搜尋訂單編號、客戶..."
-            className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={search}
-            onChange={handleSearch}
-          />
+        <div className="flex gap-3 items-center">
+          <div className="flex gap-2">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              <Download size={18} />
+              匯出
+            </button>
+            <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer">
+              <Upload size={18} />
+              匯入
+              <input
+                type="file"
+                accept=".xlsx"
+                onChange={handleImport}
+                className="hidden"
+              />
+            </label>
+            <button
+              onClick={handleDownloadTemplate}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              下載範本
+            </button>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="搜尋訂單編號、客戶..."
+              className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={search}
+              onChange={handleSearch}
+            />
+          </div>
         </div>
       </div>
 
