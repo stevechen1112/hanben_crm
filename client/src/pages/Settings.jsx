@@ -136,7 +136,9 @@ export default function Settings() {
     } catch (error) {
       alert('刪除失敗');
     }
-  };nst handleDeleteChannel = async (id) => {
+  };
+
+  const handleDeleteChannel = async (id) => {
     if (!confirm('確定要刪除此通路嗎？')) return;
     try {
       await axios.delete(`/api/settings/channels/${id}`);
