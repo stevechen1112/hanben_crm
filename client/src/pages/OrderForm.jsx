@@ -271,11 +271,6 @@ export default function OrderForm() {
               </div>
             </div>
           </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">到貨日期</label>
-              <input type="date" name="arrivalDate" value={formData.arrivalDate} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
-            </div>
-          </div>
           
           <div className="md:col-span-2">
              <label className="block text-sm font-medium text-gray-700">備註</label>
