@@ -304,38 +304,7 @@ export default function Settings() {
                 </button>
               </div>
             ))}
-            {contactMethods.length === 0 && <p className="text-gray-500 text-center py-4">尚無聯絡方式
-        {/* Channel Management */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border">
-          <h3 className="text-xl font-semibold mb-4 text-gray-700">通路管理</h3>
-
-          <form onSubmit={handleAddChannel} className="flex gap-2 mb-6">
-            <input
-              type="text"
-              placeholder="通路名稱"
-              required
-              value={newChannel}
-              onChange={e => setNewChannel(e.target.value)}
-              className="flex-1 rounded-md border-gray-300 border p-2"
-            />
-            <button type="submit" className="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">
-              <Plus size={20} />
-            </button>
-          </form>
-
-          <div className="space-y-2 max-h-[500px] overflow-y-auto">
-            {channels.map(channel => (
-              <div key={channel.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="font-medium">{channel.name}</span>
-                <button
-                  onClick={() => handleDeleteChannel(channel.id)}
-                  className="text-red-500 hover:bg-red-50 p-1 rounded"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            ))}
-            {channels.length === 0 && <p className="text-gray-500 text-center py-4">尚無通路資料</p>}
+            {contactMethods.length === 0 && <p className="text-gray-500 text-center py-4">尚無聯絡方式資料</p>}
           </div>
         </div>
       </div>
