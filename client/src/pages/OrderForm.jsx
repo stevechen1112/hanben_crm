@@ -268,36 +268,9 @@ export default function OrderForm() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">到貨日期</label>
                 <input type="date" name="arrivalDate" value={formData.arrivalDate} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
-              </div
-                {products.map(p => <option key={p.id} value={p.name} />)}
-              </datalist>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">數量</label>
-                <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">銷售金額</label>
-                <input type="number" name="amount" value={formData.amount} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">運費</label>
-                <input type="number" name="shippingFee" value={formData.shippingFee} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">物流</label>
-                <input list="logistics" name="logistics" value={formData.logistics} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
-                <datalist id="logistics">
-                  <option value="黑貓" />
-                  <option value="新竹物流" />
-                  <option value="郵局" />
-                  <option value="超商取貨" />
-                </datalist>
-              </div>
-            </div>
+          </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">到貨日期</label>
               <input type="date" name="arrivalDate" value={formData.arrivalDate} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
