@@ -155,7 +155,38 @@ export default function Settings() {
       <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
         <SettingsIcon /> 系統設定
       </h2>
-{editingProduct?.id === product.id ? (
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Product Management */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border">
+          <h3 className="text-xl font-semibold mb-4 text-gray-700">商品管理</h3>
+
+          <form onSubmit={handleAddProduct} className="flex gap-2 mb-6">
+            <input
+              type="text"
+              placeholder="商品名稱"
+              required
+              value={newProduct.name}
+              onChange={e => setNewProduct({ ...newProduct, name: e.target.value })}
+              className="flex-1 rounded-md border-gray-300 border p-2"
+            />
+            <input
+              type="number"
+              placeholder="庫存"
+              required
+              value={newProduct.stock}
+              onChange={e => setNewProduct({ ...newProduct, stock: e.target.value })}
+              className="w-24 rounded-md border-gray-300 border p-2"
+            />
+            <button type="submit" className="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">
+              <Plus size={20} />
+            </button>
+          </form>
+
+          <div className="space-y-2 max-h-[500px] overflow-y-auto">
+            {products.map(product => (
+              <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                {editingProduct?.id === product.id ? (
                   <>
                     <div className="flex-1 grid grid-cols-2 gap-2 mr-4">
                       <input
