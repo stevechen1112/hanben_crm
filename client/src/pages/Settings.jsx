@@ -74,6 +74,17 @@ export default function Settings() {
     setEditingProduct(null);
   };
 
+  const handleDeleteProduct = async (id) => {
+    if (!confirm('確定要刪除此商品嗎？')) return;
+    try {
+      await axios.delete(`/api/settings/products/${id}`);
+      alert('商品刪除成功！');
+      fetchSettings();
+    } catch (error) {
+      alert('刪除失敗');
+    }
+  };
+
   const handleUpdateProduct = async (id, name, stock) => {
     try {
       await axios.put(`/api/settings/products/${id}`, { name, stock });
@@ -224,12 +235,20 @@ export default function Settings() {
                         <span className="font-medium">{product.stock}</span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleEditProduct(product)}
-                      className="text-blue-600 hover:bg-blue-50 p-1 rounded"
-                    >
-                      <Edit2 size={18} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => handleEditProduct(product)}
+                        className="text-blue-600 hover:bg-blue-50 p-1 rounded"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="text-red-500 hover:bg-red-50 p-1 rounded"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
