@@ -286,20 +286,67 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">商品</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">金額</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">狀態</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <template x-for="order in orders.data" :key="order.id">
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" x-text="order.orderId"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="new Date(order.date).toLocaleDateString()"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="order.customer.name"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="order.productName"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">$<span x-text="order.amount"></span></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        <span x-show="order.arrivalDate" class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">已到貨</span>
-                                        <span x-show="!order.arrivalDate" class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">運送中</span>
-                                    </td>
+                                    <template x-if="editingOrderId === order.id">
+                                        <td class="px-6 py-4 text-sm" colspan="7">
+                                            <div class="space-y-3">
+                                                <div class="grid grid-cols-3 gap-3">
+                                                    <input type="text" x-model="orderEdit.orderId" placeholder="訂單編號" class="border p-2 rounded">
+                                                    <input type="date" x-model="orderEdit.date" class="border p-2 rounded">
+                                                    <input type="text" x-model="orderEdit.channel" placeholder="通路" class="border p-2 rounded">
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <input type="text" x-model="orderEdit.name" placeholder="客戶姓名" class="border p-2 rounded" readonly>
+                                                    <input type="text" x-model="orderEdit.phone" placeholder="電話" class="border p-2 rounded" readonly>
+                                                </div>
+                                                <input type="text" x-model="orderEdit.address" placeholder="地址" class="border p-2 rounded w-full" readonly>
+                                                <div class="grid grid-cols-3 gap-3">
+                                                    <input type="number" x-model="orderEdit.amount" placeholder="金額" class="border p-2 rounded">
+                                                    <input type="number" x-model="orderEdit.shippingFee" placeholder="運費" class="border p-2 rounded">
+                                                    <input type="text" x-model="orderEdit.logistics" placeholder="物流" class="border p-2 rounded">
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <input type="date" x-model="orderEdit.arrivalDate" placeholder="到貨日期" class="border p-2 rounded">
+                                                    <input type="text" x-model="orderEdit.afterSalesNotes" placeholder="售後關懷" class="border p-2 rounded">
+                                                </div>
+                                                <div class="flex space-x-2">
+                                                    <button @click="saveOrderEdit()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">儲存</button>
+                                                    <button @click="cancelEditOrder()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">取消</button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </template>
+                                    <template x-if="editingOrderId !== order.id">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" x-text="order.orderId"></td>
+                                    </template>
+                                    <template x-if="editingOrderId !== order.id">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="new Date(order.date).toLocaleDateString()"></td>
+                                    </template>
+                                    <template x-if="editingOrderId !== order.id">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="order.customer.name"></td>
+                                    </template>
+                                    <template x-if="editingOrderId !== order.id">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="order.productName"></td>
+                                    </template>
+                                    <template x-if="editingOrderId !== order.id">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">$<span x-text="order.amount"></span></td>
+                                    </template>
+                                    <template x-if="editingOrderId !== order.id">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <span x-show="order.arrivalDate" class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">已到貨</span>
+                                            <span x-show="!order.arrivalDate" class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">運送中</span>
+                                        </td>
+                                    </template>
+                                    <template x-if="editingOrderId !== order.id">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <button @click="startEditOrder(order)" class="text-blue-600 hover:text-blue-800">編輯</button>
+                                        </td>
+                                    </template>
                                 </tr>
                             </template>
                         </tbody>

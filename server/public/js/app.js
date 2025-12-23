@@ -22,6 +22,10 @@ function crmApp() {
         editingCustomerId: null,
         customerEdit: { id: null, name: '', phone: '', address: '', symptoms: '' },
 
+        // Order edit (inline)
+        editingOrderId: null,
+        orderEdit: { id: null, orderId: '', date: '', name: '', phone: '', address: '', channel: '', amount: 0, shippingFee: 0, logistics: '', arrivalDate: '', afterSalesNotes: '' },
+
         stats: {
             totalCustomers: 0,
             totalOrders: 0,
@@ -336,6 +340,52 @@ function crmApp() {
                 this.cancelEditCustomer();
                 await this.loadCustomers();
                 alert('客戶資料已更新');
+            } catch (e) {
+                alert(e?.response?.data?.error || '更新失敗');
+            }
+        },
+
+        // Order edit functions
+        startEditOrder(order) {
+            this.editingOrderId = order.id;
+            this.orderEdit = {
+                id: order.id,
+                orderId: order.orderId || '',
+                date: order.date ? new Date(order.date).toISOString().split('T')[0] : '',
+                name: order.customer?.name || '',
+                phone: order.customer?.phone || '',
+                address: order.customer?.address || '',
+                channel: order.channel || '',
+                amount: order.amount || 0,
+                shippingFee: order.shippingFee || 0,
+                logistics: order.logistics || '',
+                arrivalDate: order.arrivalDate ? new Date(order.arrivalDate).toISOString().split('T')[0] : '',
+                afterSalesNotes: order.afterSalesNotes || ''
+            };
+        },
+
+        cancelEditOrder() {
+            this.editingOrderId = null;
+            this.orderEdit = { id: null, orderId: '', date: '', name: '', phone: '', address: '', channel: '', amount: 0, shippingFee: 0, logistics: '', arrivalDate: '', afterSalesNotes: '' };
+        },
+
+        async saveOrderEdit() {
+            if (!this.orderEdit.id) return;
+            try {
+                const payload = {
+                    orderId: this.orderEdit.orderId,
+                    date: this.orderEdit.date,
+                    channel: this.orderEdit.channel,
+                    amount: Number(this.orderEdit.amount) || 0,
+                    shippingFee: Number(this.orderEdit.shippingFee) || 0,
+                    logistics: this.orderEdit.logistics,
+                    arrivalDate: this.orderEdit.arrivalDate || null,
+                    afterSalesNotes: this.orderEdit.afterSalesNotes
+                };
+                await axios.put(`/api/orders/${this.orderEdit.id}`, payload);
+                this.cancelEditOrder();
+                await this.loadOrders();
+                alert('訂單資料已更新');
             } catch (e) {
                 alert(e?.response?.data?.error || '更新失敗');
             }
