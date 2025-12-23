@@ -225,6 +225,8 @@ app.get('/api/export/customers', async (req, res) => {
       電話: c.phone,
       地址: c.address || '',
       症狀: c.symptoms || '',
+      社群名稱: c.socialName || '',
+      聯絡方式: c.contactMethod || '',
       訂單數: Array.isArray(c.orders) ? c.orders.length : 0,
       建立時間: c.createdAt ? new Date(c.createdAt).toISOString() : ''
     }));
@@ -275,6 +277,8 @@ app.post('/api/import/customers', upload.single('file'), async (req, res) => {
       const name = String(getRowValue(row, ['姓名', 'name', 'Name']) || '').trim();
       const address = String(getRowValue(row, ['地址', 'address', 'Address']) || '').trim();
       const symptoms = String(getRowValue(row, ['症狀', 'symptoms', 'Symptoms']) || '').trim();
+      const socialName = String(getRowValue(row, ['社群名稱', 'socialName', 'SocialName']) || '').trim();
+      const contactMethod = String(getRowValue(row, ['聯絡方式', 'contactMethod', 'ContactMethod']) || '').trim();
       if (!phone || !name) continue;
 
       await prisma.customer.upsert({
@@ -282,13 +286,17 @@ app.post('/api/import/customers', upload.single('file'), async (req, res) => {
         update: {
           name,
           address: address || null,
-          symptoms: symptoms || null
+          symptoms: symptoms || null,
+          socialName: socialName || null,
+          contactMethod: contactMethod || null
         },
         create: {
           name,
           phone,
           address: address || null,
-          symptoms: symptoms || null
+          symptoms: symptoms || null,
+          socialName: socialName || null,
+          contactMethod: contactMethod || null
         }
       });
       count++;
@@ -304,7 +312,7 @@ app.post('/api/import/customers', upload.single('file'), async (req, res) => {
 app.get('/api/export/customers-template', async (req, res) => {
   try {
     const rows = [
-      { 姓名: '', 電話: '', 地址: '', 症狀: '' }
+      { 姓名: '', 電話: '', 地址: '', 症狀: '', 社群名稱: '', 聯絡方式: '' }
     ];
 
     const wb = XLSX.utils.book_new();
@@ -335,6 +343,9 @@ app.get('/api/export/orders', async (req, res) => {
       電話: o.customer?.phone || '',
       地址: o.customer?.address || '',
       通路: o.channel || '',
+      社群名稱: o.socialName || '',
+      聯絡方式: o.contactMethod || '',
+      症狀: o.symptoms || '',
       商品項目: Array.isArray(o.items) && o.items.length > 0
         ? o.items.map((it) => `${it.productName} x${it.quantity}`).join(', ')
         : (o.productName || ''),
@@ -395,6 +406,9 @@ app.post('/api/import/orders', upload.single('file'), async (req, res) => {
 
       const address = String(getRowValue(row, ['地址', 'address', 'Address']) || '').trim();
       const channel = String(getRowValue(row, ['通路', 'channel', 'Channel']) || '').trim();
+      const socialName = String(getRowValue(row, ['社群名稱', 'socialName', 'SocialName']) || '').trim();
+      const contactMethod = String(getRowValue(row, ['聯絡方式', 'contactMethod', 'ContactMethod']) || '').trim();
+      const symptoms = String(getRowValue(row, ['症狀', 'symptoms', 'Symptoms']) || '').trim();
       const logistics = String(getRowValue(row, ['物流', 'logistics', 'Logistics']) || '').trim();
       const afterSalesNotes = String(getRowValue(row, ['售後關懷', 'afterSalesNotes', 'AfterSalesNotes']) || '').trim();
       const remarks = String(getRowValue(row, ['備註', 'remarks', 'Remarks']) || '').trim();
@@ -420,8 +434,21 @@ app.post('/api/import/orders', upload.single('file'), async (req, res) => {
       await prisma.$transaction(async (tx) => {
         const customer = await tx.customer.upsert({
           where: { phone },
-          update: { name, address: address || null },
-          create: { name, phone, address: address || null }
+          update: { 
+            name, 
+            address: address || null,
+            symptoms: symptoms || null,
+            socialName: socialName || null,
+            contactMethod: contactMethod || null
+          },
+          create: { 
+            name, 
+            phone, 
+            address: address || null,
+            symptoms: symptoms || null,
+            socialName: socialName || null,
+            contactMethod: contactMethod || null
+          }
         });
 
         // Ensure products exist so OrderItem can reference productId.
@@ -444,6 +471,9 @@ app.post('/api/import/orders', upload.single('file'), async (req, res) => {
             data: {
               date,
               channel: channel || null,
+              socialName: socialName || null,
+              contactMethod: contactMethod || null,
+              symptoms: symptoms || null,
               productName: summaryNames,
               quantity: totalQty,
               amount,
@@ -468,6 +498,9 @@ app.post('/api/import/orders', upload.single('file'), async (req, res) => {
               orderId,
               date,
               channel: channel || null,
+              socialName: socialName || null,
+              contactMethod: contactMethod || null,
+              symptoms: symptoms || null,
               productName: summaryNames,
               quantity: totalQty,
               amount,
@@ -509,6 +542,9 @@ app.get('/api/export/orders-template', async (req, res) => {
         電話: '',
         地址: '',
         通路: '',
+        社群名稱: '',
+        聯絡方式: '',
+        症狀: '',
         商品項目: '',
         金額: 0,
         運費: 0,
@@ -591,7 +627,7 @@ app.get('/api/orders', async (req, res) => {
 app.post('/api/orders', async (req, res) => {
   const {
     orderId, date, name, phone, address,
-    channel, productName, quantity, amount,
+    channel, socialName, contactMethod, symptoms, productName, quantity, amount,
     shippingFee, logistics, arrivalDate, afterSalesNotes, remarks
   } = req.body;
 
@@ -603,12 +639,18 @@ app.post('/api/orders', async (req, res) => {
       where: { phone },
       update: {
         name,
-        address: address || undefined
+        address: address || undefined,
+        symptoms: symptoms || undefined,
+        socialName: socialName || undefined,
+        contactMethod: contactMethod || undefined
       },
       create: {
         name,
         phone,
-        address
+        address,
+        symptoms,
+        socialName,
+        contactMethod
       },
     });
 
@@ -656,6 +698,9 @@ app.post('/api/orders', async (req, res) => {
           orderId,
           date: new Date(date),
           channel,
+          socialName,
+          contactMethod,
+          symptoms,
           // Legacy fields kept for compatibility with existing UI/table columns
           productName: summaryNames,
           quantity: totalQty,
@@ -980,6 +1025,39 @@ app.delete('/api/settings/channels/:id', async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.channel.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error) {
+    const { status, message } = toUserError(error);
+    res.status(status).json({ error: message });
+  }
+});
+
+// Contact Methods
+app.get('/api/settings/contact-methods', async (req, res) => {
+  try {
+    const methods = await prisma.contactMethod.findMany({ orderBy: { name: 'asc' } });
+    res.json(methods);
+  } catch (error) {
+    const { status, message } = toUserError(error);
+    res.status(status).json({ error: message });
+  }
+});
+
+app.post('/api/settings/contact-methods', async (req, res) => {
+  const { name } = req.body;
+  try {
+    const method = await prisma.contactMethod.create({ data: { name } });
+    res.json(method);
+  } catch (error) {
+    const { status, message } = toUserError(error);
+    res.status(status).json({ error: message });
+  }
+});
+
+app.delete('/api/settings/contact-methods/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.contactMethod.delete({ where: { id: Number(id) } });
     res.json({ success: true });
   } catch (error) {
     const { status, message } = toUserError(error);

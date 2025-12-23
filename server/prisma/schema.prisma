@@ -9,14 +9,16 @@ datasource db {
 }
 
 model Customer {
-  id        Int      @id @default(autoincrement())
-  name      String
-  phone     String   @unique
-  address   String?
-  symptoms  String?  // 症狀
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
+  id            Int      @id @default(autoincrement())
+  name          String
+  phone         String   @unique
+  address       String?
+  symptoms      String?  // 症狀
+  socialName    String?  // 社群名稱
+  contactMethod String?  // 聯絡方式
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  orders        Order[]
 }
 
 model Order {
@@ -24,6 +26,9 @@ model Order {
   orderId         String    @unique // 訂單編號
   date            DateTime  // 日期
   channel         String?   // 通路
+  socialName      String?   // 社群名稱
+  contactMethod   String?   // 聯絡方式
+  symptoms        String?   // 症狀
   productName     String?   // 商品名稱
   quantity        Int       @default(1) // 數量
   amount          Float     @default(0) // 銷售金額
@@ -85,6 +90,13 @@ model StockMovement {
 }
 
 model Channel {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ContactMethod {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())

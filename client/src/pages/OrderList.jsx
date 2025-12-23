@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Search, ChevronLeft, ChevronRight, FileDown, FileUp, Loader2 } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function OrderList() {
   const [orders, setOrders] = useState([]);
@@ -8,8 +8,6 @@ export default function OrderList() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchOrders();
@@ -33,75 +31,18 @@ export default function OrderList() {
     setPage(1); // Reset to page 1 on search
   };
 
-  const handleExport = () => {
-    window.open('/api/export/orders', '_blank');
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    setImporting(true);
-    try {
-      const res = await axios.post('/api/import/orders', formData);
-      alert(`匯入完成！成功匯入 ${res.data.count} 筆訂單。`);
-      fetchOrders();
-    } catch (error) {
-      console.error('Import failed:', error);
-      alert('匯入失敗，請檢查檔案格式');
-    } finally {
-      setImporting(false);
-      e.target.value = ''; // Reset input
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">訂單管理</h2>
-
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:flex-none">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="搜尋訂單、客戶..."
-              className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-              value={search}
-              onChange={handleSearch}
-            />
-          </div>
-
-          <button
-            onClick={handleExport}
-            className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-          >
-            <FileDown size={18} />
-            <span>匯出</span>
-          </button>
-
-          <button
-            onClick={handleImportClick}
-            disabled={importing}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:bg-blue-400"
-          >
-            {importing ? <Loader2 size={18} className="animate-spin" /> : <FileUp size={18} />}
-            <span>匯入</span>
-          </button>
-
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            accept=".xlsx, .xls"
+            type="text"
+            placeholder="搜尋訂單編號、客戶..."
+            className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={search}
+            onChange={handleSearch}
           />
         </div>
       </div>
@@ -114,19 +55,24 @@ export default function OrderList() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">訂單編號</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">客戶姓名</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">電話</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">症狀</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">聯絡方式</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">社群名稱</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金額</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">備註</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">載入中...</td>
+                  <td colSpan="11" className="px-6 py-4 text-center text-gray-500">載入中...</td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">無資料</td>
+                  <td colSpan="11" className="px-6 py-4 text-center text-gray-500">無資料</td>
                 </tr>
               ) : (
                 orders.map((order) => (
@@ -135,9 +81,20 @@ export default function OrderList() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(order.date).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.customer.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.productName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.customer?.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.customer?.phone}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.symptoms || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.contactMethod || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.socialName || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {order.items && order.items.length > 0 
+                        ? order.items.map(item => `${item.productName} x${item.quantity}`).join(', ')
+                        : order.productName}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.amount}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title={order.remarks}>
+                      {order.remarks || '-'}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {order.arrivalDate ? (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -155,7 +112,7 @@ export default function OrderList() {
             </tbody>
           </table>
         </div>
-
+        
         {/* Pagination */}
         <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">

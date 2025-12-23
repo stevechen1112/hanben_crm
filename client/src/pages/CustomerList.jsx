@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Search, ChevronLeft, ChevronRight, FileDown, FileUp, Loader2 } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CustomerList() {
   const [customers, setCustomers] = useState([]);
@@ -8,8 +8,6 @@ export default function CustomerList() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -33,75 +31,18 @@ export default function CustomerList() {
     setPage(1);
   };
 
-  const handleExport = () => {
-    window.open('/api/export/customers', '_blank');
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    setImporting(true);
-    try {
-      const res = await axios.post('/api/import/customers', formData);
-      alert(`匯入完成！成功匯入/更新 ${res.data.count} 筆客戶資料。`);
-      fetchCustomers();
-    } catch (error) {
-      console.error('Import failed:', error);
-      alert('匯入失敗，請檢查檔案格式');
-    } finally {
-      setImporting(false);
-      e.target.value = ''; // Reset input
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">客戶管理</h2>
-
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:flex-none">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="搜尋姓名、電話..."
-              className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-              value={search}
-              onChange={handleSearch}
-            />
-          </div>
-
-          <button
-            onClick={handleExport}
-            className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-          >
-            <FileDown size={18} />
-            <span>匯出</span>
-          </button>
-
-          <button
-            onClick={handleImportClick}
-            disabled={importing}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:bg-blue-400"
-          >
-            {importing ? <Loader2 size={18} className="animate-spin" /> : <FileUp size={18} />}
-            <span>匯入</span>
-          </button>
-
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            accept=".xlsx, .xls"
+            type="text"
+            placeholder="搜尋姓名、電話..."
+            className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={search}
+            onChange={handleSearch}
           />
         </div>
       </div>
@@ -115,25 +56,29 @@ export default function CustomerList() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">電話</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">地址</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">症狀</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">社群名稱</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">聯絡方式</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">訂單數</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">載入中...</td>
+                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">載入中...</td>
                 </tr>
               ) : customers.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">無資料</td>
+                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">無資料</td>
                 </tr>
               ) : (
                 customers.map((customer) => (
                   <tr key={customer.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{customer.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.phone}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.address}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.symptoms}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.address || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.symptoms || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.socialName || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.contactMethod || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.orders?.length || 0}</td>
                   </tr>
                 ))
