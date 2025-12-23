@@ -105,8 +105,6 @@ export default function Settings() {
     }
   };
 
-  co
-
   // Contact Method Handlers
   const handleAddContactMethod = async (e) => {
     e.preventDefault();
