@@ -8,6 +8,7 @@ export default function OrderList() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(false);
+  const [editingOrderId, setEditingOrderId] = useState(null);
 
   useEffect(() => {
     fetchOrders();
@@ -84,6 +85,19 @@ export default function OrderList() {
     } catch (error) {
       console.error('Template download error:', error);
       alert('下載範本失敗');
+    }
+  };
+
+  const handleToggleArrivalDate = async (orderId, currentDate) => {
+    try {
+      const newDate = currentDate ? null : new Date().toISOString().split('T')[0];
+      await axios.put(`/api/orders/${orderId}`, {
+        arrivalDate: newDate
+      });
+      fetchOrders();
+    } catch (error) {
+      console.error('Update error:', error);
+      alert('更新失敗');
     }
   };
 
@@ -179,15 +193,20 @@ export default function OrderList() {
                       {order.remarks || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.arrivalDate ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          已到貨
-                        </span>
-                      ) : (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                          運送中
-                        </span>
-                      )}
+                      <button
+                        onClick={() => handleToggleArrivalDate(order.id, order.arrivalDate)}
+                        className="focus:outline-none"
+                      >
+                        {order.arrivalDate ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 cursor-pointer hover:bg-green-200">
+                            已到貨
+                          </span>
+                        ) : (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 cursor-pointer hover:bg-yellow-200">
+                            運送中
+                          </span>
+                        )}
+                      </button>
                     </td>
                   </tr>
                 ))

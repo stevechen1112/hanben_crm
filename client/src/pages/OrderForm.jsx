@@ -12,7 +12,7 @@ export default function OrderForm() {
   const [contactMethods, setContactMethods] = useState([]);
   
   const [formData, setFormData] = useState({
-    orderId: '',
+    orderId: new Date().toISOString().replace(/-/g, '').slice(0, 8),
     date: new Date().toISOString().split('T')[0],
     name: '',
     phone: '',

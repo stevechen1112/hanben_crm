@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Search, ChevronLeft, ChevronRight, Download, Upload } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Download, Upload, Edit2 } from 'lucide-react';
 
 export default function CustomerList() {
   const [customers, setCustomers] = useState([]);
@@ -87,6 +87,35 @@ export default function CustomerList() {
     }
   };
 
+  const handleEditCustomer = (customer) => {
+    const newName = prompt('請輸入新的姓名:', customer.name);
+    if (newName === null) return;
+    const newAddress = prompt('請輸入新的地址:', customer.address || '');
+    if (newAddress === null) return;
+    const newSymptoms = prompt('請輸入新的症狀:', customer.symptoms || '');
+    if (newSymptoms === null) return;
+    
+    updateCustomer(customer.id, {
+      name: newName,
+      phone: customer.phone,
+      address: newAddress,
+      symptoms: newSymptoms,
+      socialName: customer.socialName,
+      contactMethod: customer.contactMethod
+    });
+  };
+
+  const updateCustomer = async (id, data) => {
+    try {
+      await axios.put(`/api/customers/${id}`, data);
+      alert('客戶資料更新成功！');
+      fetchCustomers();
+    } catch (error) {
+      console.error('Update error:', error);
+      alert('更新失敗: ' + (error.response?.data?.error || error.message));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -142,16 +171,17 @@ export default function CustomerList() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">社群名稱</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">聯絡方式</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">訂單數</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">載入中...</td>
+                  <td colSpan="8" className="px-6 py-4 text-center text-gray-500">載入中...</td>
                 </tr>
               ) : customers.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">無資料</td>
+                  <td colSpan="8" className="px-6 py-4 text-center text-gray-500">無資料</td>
                 </tr>
               ) : (
                 customers.map((customer) => (
@@ -163,6 +193,14 @@ export default function CustomerList() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.socialName || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.contactMethod || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.orders?.length || 0}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <button
+                        onClick={() => handleEditCustomer(customer)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
